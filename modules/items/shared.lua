@@ -7,6 +7,12 @@ end
 local ItemList = {}
 local isServer = IsDuplicityVersion()
 
+local function setImagePath(path)
+    if path then
+        return path:match('^[%w]+://') and path or ('%s/%s'):format(client.imagepath, path)
+    end
+end
+
 ---@param data OxItem
 local function newItem(data)
 	data.weight = data.weight or 0
@@ -28,34 +34,46 @@ local function newItem(data)
 	end
 
 	if isServer then
+        ---@cast data OxServerItem
+        serverData = data.server
 		data.client = nil
-
-		if serverData?.export then
-			data.cb = useExport(string.strsplit('.', serverData.export))
-		end
 
 		if not data.durability then
 			if data.degrade or (data.consume and data.consume ~= 0 and data.consume < 1) then
 				data.durability = true
 			end
 		end
+
+        if not serverData then goto continue end
+
+        if serverData.export then
+            data.cb = useExport(string.strsplit('.', serverData.export))
+        end
 	else
+        ---@cast data OxClientItem
+        clientData = data.client
 		data.server = nil
 		data.count = 0
 
-		if clientData?.export then
-			data.export = useExport(string.strsplit('.', clientData.export))
-		end
+        if not clientData then goto continue end
 
-		if clientData?.image then
-			clientData.image = clientData.image:match('^[%w]+://') and clientData.image or ('%s/%s'):format(client.imagepath, clientData.image)
-		end
+        if clientData.export then
+            data.export = useExport(string.strsplit('.', clientData.export))
+        end
+
+        clientData.image = setImagePath(clientData.image)
+
+        if clientData.propTwo then
+            clientData.prop = clientData.prop and { clientData.prop, clientData.propTwo } or clientData.propTwo
+            clientData.propTwo = nil
+        end
 	end
 
+    ::continue::
 	ItemList[data.name] = data
 end
 
-for type, data in pairs(data('weapons')) do
+for type, data in pairs(lib.load('data.weapons')) do
 	for k, v in pairs(data) do
 		v.name = k
 		v.close = type == 'Ammo' and true or false
@@ -80,7 +98,7 @@ for type, data in pairs(data('weapons')) do
 			local clientData = v.client
 
 			if clientData?.image then
-				clientData.image = clientData.image:match('^[%w]+://') and ('url(%s)'):format(clientData.image) or ('url(%s/%s)'):format(client.imagepath, clientData.image)
+                clientData.image = setImagePath(clientData.image)
 			end
 		end
 
@@ -88,7 +106,7 @@ for type, data in pairs(data('weapons')) do
 	end
 end
 
-for k, v in pairs(data 'items') do
+for k, v in pairs(lib.load('data.items')) do
 	v.name = k
 	local success, response = pcall(newItem, v)
 

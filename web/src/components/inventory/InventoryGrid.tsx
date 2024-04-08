@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Inventory, InventoryType } from '../../typings';
 import WeightBar from '../utils/WeightBar';
 import InventorySlot from './InventorySlot';
@@ -11,16 +11,16 @@ const PAGE_SIZE = 35;
 
 
 const InventoryGrid: React.FC<{ inventory: Inventory }> = ({ inventory }) => {
-  const weight = React.useMemo(
+  const weight = useMemo(
     () => (inventory.maxWeight !== undefined ? Math.floor(getTotalWeight(inventory.items) * 1000) / 1000 : 0),
     [inventory.maxWeight, inventory.items]
   );
-  const [page, setPage] = React.useState(0);
+  const [page, setPage] = useState(0);
   const containerRef = useRef(null);
   const { ref, entry } = useIntersection({ threshold: 0.5 });
   const isBusy = useAppSelector((state) => state.inventory.isBusy);
   const hotbar = inventory.items.slice(0,5)
-  React.useEffect(() => {
+  useEffect(() => {
     if (entry && entry.isIntersecting) {
       setPage((prev) => ++prev);
     }
@@ -37,7 +37,7 @@ const InventoryGrid: React.FC<{ inventory: Inventory }> = ({ inventory }) => {
               </p>
             )}
           </div>
-          
+
         </div>
 
         <div className="hot-inventory-grid-container" ref={containerRef}>
@@ -70,7 +70,7 @@ const InventoryGrid: React.FC<{ inventory: Inventory }> = ({ inventory }) => {
                 inventoryId={inventory.id}
               />
             ))}
-            
+
           </>
         </div>
 
@@ -90,7 +90,7 @@ const InventoryGrid: React.FC<{ inventory: Inventory }> = ({ inventory }) => {
               inventoryId={inventory.id}
             />
           ))}
-          
+
         </>
       </div>
         }
