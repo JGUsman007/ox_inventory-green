@@ -1,10 +1,9 @@
-local playerDropped = ...
 local Inventory = require 'modules.inventory.server'
 local Items = require 'modules.items.server'
 
 local QBCore
 
-AddEventHandler('QBCore:Server:OnPlayerUnload', playerDropped)
+AddEventHandler('QBCore:Server:OnPlayerUnload', server.playerDropped)
 
 AddEventHandler('QBCore:Server:OnJobUpdate', function(source, job)
 	local inventory = Inventory(source)
@@ -41,7 +40,7 @@ end
 local function setupPlayer(Player)
 	Player.PlayerData.inventory = Player.PlayerData.items
 	Player.PlayerData.identifier = Player.PlayerData.citizenid
-
+	Player.PlayerData.name = ('%s %s'):format(Player.PlayerData.charinfo.firstname, Player.PlayerData.charinfo.lastname)
 	server.setPlayerInventory(Player.PlayerData)
 
 	Inventory.SetItem(Player.PlayerData.source, 'money', Player.PlayerData.money.cash)

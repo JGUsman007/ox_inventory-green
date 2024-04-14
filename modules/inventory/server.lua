@@ -75,10 +75,10 @@ function OxInventory:syncSlotsWithClients(slots, syncOwner)
 	end
 end
 
-local Vehicles = data 'vehicles'
+local Vehicles = lib.load('data.vehicles')
 local RegisteredStashes = {}
 
-for _, stash in pairs(data 'stashes') do
+for _, stash in pairs(lib.load('data.stashes')) do
 	RegisteredStashes[stash.name] = {
 		name = stash.name,
 		label = stash.label,
@@ -161,8 +161,15 @@ local function loadInventoryData(data, player)
 
 			local model, class = lib.callback.await('ox_inventory:getVehicleData', source, data.netid)
 			local storage = Vehicles[data.type].models[model] or Vehicles[data.type][class]
-            local vehicleId = server.getOwnedVehicleId and server.getOwnedVehicleId(entity)
-            inventory = Inventory.Create(vehicleId or data.id, plate, data.type, storage[1], 0, storage[2], false)
+            local dbId
+
+            if server.getOwnedVehicleId then
+                dbId = server.getOwnedVehicleId(entity)
+            else
+                dbId = data.id:sub(6)
+            end
+
+            inventory = Inventory.Create(data.id, plate, data.type, storage[1], 0, storage[2], false, nil, nil, dbId)
 		end
 	elseif data.type == 'policeevidence' then
 		inventory = Inventory.Create(data.id, locale('police_evidence'), data.type, 100, 0, 100000, false)
@@ -541,10 +548,11 @@ end, true)
 ---@param maxWeight number
 ---@param owner string | number | boolean
 ---@param items? table
+---@param dbId? string | number
 ---@return OxInventory?
 --- This should only be utilised internally!
 --- To create a stash, please use `exports.ox_inventory:RegisterStash` instead.
-function Inventory.Create(id, label, invType, slots, weight, maxWeight, owner, items, groups)
+function Inventory.Create(id, label, invType, slots, weight, maxWeight, owner, items, groups, dbId)
 	if invType == 'player' and hasActiveInventory(id, owner) then return end
 
 	local self = {
@@ -563,6 +571,7 @@ function Inventory.Create(id, label, invType, slots, weight, maxWeight, owner, i
 		time = os.time(),
 		groups = groups,
 		openedBy = {},
+        dbId = dbId
 	}
 
 	if invType == 'drop' or invType == 'temp' or invType == 'dumpster' then
@@ -576,18 +585,11 @@ function Inventory.Create(id, label, invType, slots, weight, maxWeight, owner, i
 			if invType ~= 'player' and owner and type(owner) ~= 'boolean' then
 				self.id = ('%s:%s'):format(self.id, owner)
 			end
-		else
-            if string.find(id, '^glove') or string.find(id, '^trunk') then
-                self.dbId = id:sub(6)
-            else
-                self.dbId = id
-                self.id = (invType == 'glovebox' and 'glove' or invType) .. label
-            end
 		end
 	end
 
 	if not items then
-		self.items, self.weight = Inventory.Load(self.dbId or self.id, invType, owner, self.datastore)
+		self.items, self.weight = Inventory.Load(self.dbId, invType, owner)
 	elseif weight == 0 and next(items) then
 		self.weight = Inventory.CalculateWeight(items)
 	end
@@ -766,26 +768,27 @@ end
 ---@param id string|number
 ---@param invType string
 ---@param owner string | number | boolean
----@param datastore? boolean
-function Inventory.Load(id, invType, owner, datastore)
+function Inventory.Load(id, invType, owner)
+    if not invType then return end
+
 	local result
 
-	if id and invType then
-		if invType == 'dumpster' then
-			if server.randomloot then
-				return generateItems(id, invType)
-            end
-		elseif invType == 'trunk' or invType == 'glovebox' then
-			result = invType == 'trunk' and db.loadTrunk(id) or db.loadGlovebox(id)
+    if invType == 'trunk' or invType == 'glovebox' then
+        result = id and (invType == 'trunk' and db.loadTrunk(id) or db.loadGlovebox(id))
 
-			if not result then
-				if server.randomloot then
-					return generateItems(id, 'vehicle')
-                end
-			else result = result[invType] end
-		elseif not datastore then
-			result = db.loadStash(owner or '', id)
+        if not result then
+            if server.randomloot then
+                return generateItems(id, 'vehicle')
+            end
+        else
+            result = result[invType]
+        end
+	elseif invType == 'dumpster' then
+		if server.randomloot then
+			return generateItems(id, invType)
 		end
+	elseif id then
+		result = db.loadStash(owner or '', id)
 	end
 
 	local returnData, weight = {}, 0
@@ -1007,6 +1010,16 @@ function Inventory.SetSlotCount(inv, slots)
 
 	inv.changed = true
 	inv.slots = slots
+
+	if inv.player then
+        TriggerClientEvent('ox_inventory:refreshSlotCount', inv.id, {inventoryId = inv.id, slots = inv.slots})
+    end
+
+    for playerId in pairs(inv.openedBy) do
+        if playerId ~= inv.id then
+            TriggerClientEvent('ox_inventory:refreshSlotCount', playerId, {inventoryId = inv.id, slots = inv.slots})
+        end
+	end
 end
 
 exports('SetSlotCount', Inventory.SetSlotCount)
@@ -1210,8 +1223,10 @@ exports('Search', Inventory.Search)
 ---@param item table | string
 ---@param metadata? table
 function Inventory.GetItemSlots(inv, item, metadata)
-	inv = Inventory(inv) --[[@as OxInventory]]
+	if type(item) ~= 'table' then item = Items(item) end
+	if not item then return end
 
+	inv = Inventory(inv) --[[@as OxInventory]]
 	if not inv?.slots then return end
 
 	local totalCount, slots, emptySlots = 0, {}, inv.slots
@@ -1579,6 +1594,8 @@ lib.callback.register('ox_inventory:swapItems', function(source, data)
 		return
 	end
 
+    if data.toType == 'inspect' or data.fromType == 'inspect' then return end
+
 	local fromRef = ('%s:%s'):format(fromInventory.id, data.fromSlot)
 	local toRef = ('%s:%s'):format(toInventory.id, data.toSlot)
 
@@ -1640,7 +1657,10 @@ lib.callback.register('ox_inventory:swapItems', function(source, data)
             return dropItem(source, playerInventory, fromData, data)
         end
 
-		if fromData and (not fromData.metadata.container or fromData.metadata.container and toInventory.type ~= 'container') then
+		if fromData then
+            if fromData.metadata.container and toInventory.type == 'container' then return false end
+            if toData and toData.metadata.container and fromInventory.type == 'container' then return false end
+
 			local container, containerItem = (not sameInventory and playerInventory.containerSlot) and (fromInventory.type == 'container' and fromInventory or toInventory)
 
 			if container then
@@ -1678,7 +1698,7 @@ lib.callback.register('ox_inventory:swapItems', function(source, data)
 								return
 							end
 
-							Inventory.ContainerWeight(containerItem, toContainer and fromWeight or toWeight, playerInventory)
+							Inventory.ContainerWeight(containerItem, toContainer and toWeight or fromWeight, playerInventory)
 						end
 
 						if fromOtherPlayer then
@@ -2170,6 +2190,8 @@ function Inventory.GetSlotIdsWithItem(inv, itemName, metadata, strict)
 	end
 end
 
+exports('GetSlotIdsWithItem', Inventory.GetSlotIdsWithItem)
+
 ---@param inv inventory
 ---@param itemName string
 ---@param metadata? any
@@ -2248,7 +2270,6 @@ local inventoryClearTime = GetConvarInt('inventory:cleartime', 5) * 60
 local function saveInventories(clearInventories)
 	if isSaving then return end
 
-	isSaving = true
 	local time = os.time()
 	local parameters = { {}, {}, {}, {} }
 	local total = { 0, 0, 0, 0, 0 }
@@ -2273,10 +2294,12 @@ local function saveInventories(clearInventories)
 	end
 
     if total[5] > 0 then
-	    db.saveInventories(parameters[1], parameters[2], parameters[3], parameters[4], total)
-    end
+        isSaving = true
+        local ok, err = pcall(db.saveInventories, parameters[1], parameters[2], parameters[3], parameters[4], total)
+        isSaving = false
 
-	isSaving = false
+        if not ok and err then return lib.print.error(err) end
+    end
 
     if not clearInventories then return end
 
@@ -2306,6 +2329,8 @@ function Inventory.SaveInventories(lock, clearInventories)
 end
 
 AddEventHandler('playerDropped', function()
+	server.playerDropped(source)
+
 	if GetNumPlayerIndices() == 0 then
 		Inventory.SaveInventories(false, true)
 	end
@@ -2642,5 +2667,17 @@ function Inventory.CreateTemporaryStash(properties)
 end
 
 exports('CreateTemporaryStash', Inventory.CreateTemporaryStash)
+
+function Inventory.InspectInventory(playerId, invId)
+	local inventory = invId ~= playerId and Inventory(invId)
+	local playerInventory = Inventory(playerId)
+
+	if playerInventory and inventory then
+		playerInventory:openInventory(inventory)
+		TriggerClientEvent('ox_inventory:viewInventory', playerId, playerInventory, inventory)
+	end
+end
+
+exports('InspectInventory', Inventory.InspectInventory)
 
 return Inventory

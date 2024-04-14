@@ -1,11 +1,26 @@
 return {
 	Weapons = {
+		['WEAPON_BATTLERIFLE'] = {
+			label = 'Battle Rifle',
+			weight = 3300,
+			durability = 0.03,
+			ammoname = 'ammo-rifle2',
+		},
+
+		['WEAPON_SNOWLAUNCHER'] = {
+			label = 'Snowball Launcher',
+			weight = 1000,
+			durability = 0.03,
+			ammoname = 'WEAPON_SNOWBALL',
+		},
+
 		['WEAPON_TECPISTOL'] = {
 			label = 'Tactical SMG',
 			weight = 1500,
 			durability = 0.075,
 			ammoname = 'ammo-9',
 		},
+
 		['WEAPON_ADVANCEDRIFLE'] = {
 			label = 'Advanced Rifle',
 			weight = 3100,
@@ -724,6 +739,7 @@ return {
 			weight = 280,
 			type = 'muzzle',
 			client = {
+                image = 'at_suppressor.png',
 				component = {
 					`COMPONENT_AT_PI_SUPP`,
 					`COMPONENT_AT_PI_SUPP_02`,
@@ -739,11 +755,12 @@ return {
 			weight = 280,
 			type = 'muzzle',
 			client = {
+                image = 'at_suppressor.png',
 				component = {
 					`COMPONENT_AT_AR_SUPP`,
 					`COMPONENT_AT_AR_SUPP_02`,
 					`COMPONENT_AT_SR_SUPP`,
-					`COMPONENT_AT_SR_SUPP_03`
+					`COMPONENT_AT_SR_SUPP_03`,
 				},
 				usetime = 2500
 			}
@@ -786,6 +803,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_extended.png',
 				component = {
 					`COMPONENT_APPISTOL_CLIP_02`,
 					`COMPONENT_CERAMICPISTOL_CLIP_02`,
@@ -808,6 +826,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_extended.png',
 				component = {
 					`COMPONENT_ASSAULTSMG_CLIP_02`,
 					`COMPONENT_COMBATPDW_CLIP_02`,
@@ -826,6 +845,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_extended2.png',
 				component = {
 					`COMPONENT_ASSAULTSHOTGUN_CLIP_02`,
 					`COMPONENT_HEAVYSHOTGUN_CLIP_02`,
@@ -839,6 +859,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_extended2.png',
 				component = {
 					`COMPONENT_ADVANCEDRIFLE_CLIP_02`,
 					`COMPONENT_ASSAULTRIFLE_CLIP_02`,
@@ -853,6 +874,7 @@ return {
 					`COMPONENT_SPECIALCARBINE_CLIP_02`,
 					`COMPONENT_SPECIALCARBINE_MK2_CLIP_02`,
 					`COMPONENT_TACTICALRIFLE_CLIP_02`,
+					`COMPONENT_BATTLERIFLE_CLIP_02`,
 				},
 				usetime = 2500
 			}
@@ -863,6 +885,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_drum.png',
 				component = {
 					`COMPONENT_GUSENBERG_CLIP_02`,
 					`COMPONENT_MG_CLIP_02`,
@@ -878,6 +901,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_extended2.png',
 				component = {
 					`COMPONENT_HEAVYSNIPER_MK2_CLIP_02`,
 					`COMPONENT_MARKSMANRIFLE_CLIP_02`,
@@ -892,6 +916,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_drum.png',
 				component = {
 					`COMPONENT_COMBATPDW_CLIP_03`,
 					`COMPONENT_MACHINEPISTOL_CLIP_03`,
@@ -906,6 +931,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_drum.png',
 				component = {
 					`COMPONENT_HEAVYSHOTGUN_CLIP_03`
 				},
@@ -918,6 +944,7 @@ return {
 			type = 'magazine',
 			weight = 280,
 			client = {
+                image = 'at_clip_drum.png',
 				component = {
 					`COMPONENT_ASSAULTRIFLE_CLIP_03`,
 					`COMPONENT_COMPACTRIFLE_CLIP_03`,
@@ -1323,6 +1350,126 @@ return {
 			client = {
 				component = {
 					`COMPONENT_KNUCKLE_VARMOD_VAGOS`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_blagueurs'] = {
+			label = 'Blagueurs Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_splatter'] = {
+			label = 'Splatter Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_01`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_bulletholes'] = {
+			label = 'Bullet Holes Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_02`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_burgershot'] = {
+			label = 'Burger Shot Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_03`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_cluckinbell'] = {
+			label = 'Cluckin Bell Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_04`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_fatalincursion'] = {
+			label = 'Fatal Incursion Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_05`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_luchalibre'] = {
+			label = 'Lucha Libre Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_06`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_trippy'] = {
+			label = 'Trippy Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_07`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_tiedye'] = {
+			label = 'Tie-Dye Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_08`
+				},
+				usetime = 2500
+			}
+		},
+
+		['at_skin_wall'] = {
+			label = 'Wall Weapon Kit',
+			type = 'skin',
+			weight = 50,
+			client = {
+				component = {
+					`COMPONENT_BAT_VARMOD_XM3_09`
 				},
 				usetime = 2500
 			}
